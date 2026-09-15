@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,10 +11,11 @@ driver = webdriver.Chrome(service=service)
 
 EMAIL = "test@example.com"
 PASSWORD = "mypassword123"
+ATTEMPTS = 25
 
 try:
-    for attempt in range(1, 11):
-        print(f"\n========== Attempt {attempt}/10 ==========")
+    for attempt in range(1, ATTEMPTS + 1):
+        print(f"\n========== Attempt {attempt}/{ATTEMPTS} ==========")
 
         driver.get("http://localhost:5173/")
 
@@ -62,7 +64,8 @@ try:
         )
 
         time.sleep(0.5)
-        login_button.click()
+        actions = ActionChains(driver)
+        actions.move_to_element(login_button).click_and_hold().pause(0.06).release().perform()
 
         print("Login submitted")
 
