@@ -1,38 +1,73 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 
-driver = webdriver.Chrome()
+service = Service(r"C:\WebDriver\chromedriver-win64\chromedriver.exe")
+driver = webdriver.Chrome(service=service)
+
+EMAIL = "test@example.com"
+PASSWORD = "mypassword123"
 
 try:
-    # Open your React app
-    driver.get("http://localhost:5173/")
+    for attempt in range(1, 11):
+        print(f"\n========== Attempt {attempt}/10 ==========")
 
-    wait = WebDriverWait(driver, 10)
+        driver.get("http://localhost:5173/")
 
-    # Wait for and fill email
-    email_input = wait.until(
-        EC.visibility_of_element_located((By.ID, "email"))
-    )
-    time.sleep(2)
-    email_input.send_keys("test@example.com")
+        wait = WebDriverWait(driver, 10)
 
-    # Fill password
-    password_input = driver.find_element(By.ID, "password")
-    time.sleep(1)
-    password_input.send_keys("mypassword123")
+        # -----------------------------------------
+        # EMAIL
+        # -----------------------------------------
 
-    # Submit the form
-    login_button = driver.find_element(
-        By.CSS_SELECTOR,
-        "button[type='submit']"
-    )
-    time.sleep(1)
-    login_button.click()
+        email_input = wait.until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, '[role="textbox"][aria-label="Email address"]')
+            )
+        )
+
+        email_input.click()
+
+        for char in EMAIL:
+            email_input.send_keys(char)
+            time.sleep(0.08)
+
+        # -----------------------------------------
+        # PASSWORD
+        # -----------------------------------------
+
+        password_input = wait.until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, '[role="textbox"][aria-label="Password"]')
+            )
+        )
+
+        password_input.click()
+
+        for char in PASSWORD:
+            password_input.send_keys(char)
+            time.sleep(0.08)
+
+        # -----------------------------------------
+        # SIGN IN
+        # -----------------------------------------
+
+        login_button = wait.until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, 'button[type="submit"]')
+            )
+        )
+
+        time.sleep(0.5)
+        login_button.click()
+
+        print("Login submitted")
+
+        # Give React/backend time to process the request
+        time.sleep(3)
 
 finally:
-    # Keep browser open temporarily if you want to inspect results
-    time.sleep(3)
     driver.quit()
