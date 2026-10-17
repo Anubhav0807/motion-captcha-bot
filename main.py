@@ -1,76 +1,68 @@
-from selenium import webdriver
-from selenium.webdriver import ActionChains
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import random
 import time
 
-service = Service(r"C:\WebDriver\chromedriver-win64\chromedriver.exe")
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
+from config import CHROMEDRIVER_PATH, EMAIL, PASSWORD, attempts
+from interactions import human_click, type_humanlike
+from mouse_movement import spawn_mouse
+
+
+service = Service(CHROMEDRIVER_PATH)
 driver = webdriver.Chrome(service=service)
 
-EMAIL = "test@example.com"
-PASSWORD = "mypassword123"
-ATTEMPTS = 25
-
 try:
-    for attempt in range(1, ATTEMPTS + 1):
-        print(f"\n========== Attempt {attempt}/{ATTEMPTS} ==========")
+    for attempt in range(1, attempts + 1):
+        print(f"\n========== Attempt {attempt}/{attempts} ==========")
 
         driver.get("http://localhost:5173/")
-
         wait = WebDriverWait(driver, 10)
+        wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
-        # -----------------------------------------
+        mouse_pos = spawn_mouse(driver)
+        print(f"Mouse spawned at viewport coordinate: {mouse_pos}")
+
         # EMAIL
-        # -----------------------------------------
-
         email_input = wait.until(
             EC.element_to_be_clickable(
                 (By.CSS_SELECTOR, '[role="textbox"][aria-label="Email address"]')
             )
         )
+        mouse_pos = human_click(driver, mouse_pos, email_input)
+        time.sleep(random.uniform(0.1, 0.3))
+        type_humanlike(email_input, EMAIL)
 
-        email_input.click()
-
-        for char in EMAIL:
-            email_input.send_keys(char)
-            time.sleep(0.08)
-
-        # -----------------------------------------
         # PASSWORD
-        # -----------------------------------------
-
         password_input = wait.until(
             EC.element_to_be_clickable(
                 (By.CSS_SELECTOR, '[role="textbox"][aria-label="Password"]')
             )
         )
+        mouse_pos = human_click(driver, mouse_pos, password_input)
+        time.sleep(random.uniform(0.1, 0.3))
+        type_humanlike(password_input, PASSWORD)
 
-        password_input.click()
-
-        for char in PASSWORD:
-            password_input.send_keys(char)
-            time.sleep(0.08)
-
-        # -----------------------------------------
         # SIGN IN
-        # -----------------------------------------
-
         login_button = wait.until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, 'button[type="submit"]')
-            )
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[type="submit"]'))
         )
-
-        time.sleep(0.5)
-        actions = ActionChains(driver)
-        actions.move_to_element(login_button).click_and_hold().pause(0.06).release().perform()
+        time.sleep(random.uniform(0.2, 0.5))
+        mouse_pos = human_click(driver, mouse_pos, login_button)
 
         print("Login submitted")
-
-        # Give React/backend time to process the request
         time.sleep(3)
 
 finally:
-    driver.quit()
+    try:
+        for _ in range(100):
+            if not driver.window_handles:
+                break
+            time.sleep(1)
+        else:
+            driver.quit()
+    except Exception:
+        pass
